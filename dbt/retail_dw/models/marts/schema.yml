@@ -1,0 +1,67 @@
+version: 2
+
+sources:
+  - name: analytics
+    description: Tables managed outside dbt (calendar dimension, populated by etl/generate_dim_date.py).
+    tables:
+      - name: dim_date
+
+models:
+  - name: dim_customer
+    description: Customer dimension, one row per customer (Type-1 for now; effective_date/is_current columns are in place for a future SCD2 migration).
+    columns:
+      - name: customer_key
+        tests: [not_null, unique]
+      - name: customer_id
+        tests: [not_null, unique]
+
+  - name: dim_product
+    description: Product dimension with derived margin_pct.
+    columns:
+      - name: product_key
+        tests: [not_null, unique]
+      - name: product_id
+        tests: [not_null, unique]
+      - name: unit_price
+        tests:
+          - not_null
+          - dbt_utils.accepted_range:
+              min_value: 0
+              config:
+                severity: warn
+
+  - name: dim_store
+    description: Store dimension.
+    columns:
+      - name: store_key
+        tests: [not_null, unique]
+      - name: store_id
+        tests: [not_null, unique]
+
+  - name: fact_sales
+    description: One row per order line; grain enforced by the unique test below.
+    columns:
+      - name: order_id
+        tests: [not_null, unique]
+      - name: date_key
+        tests: [not_null]
+      - name: customer_key
+        tests:
+          - not_null
+          - relationships:
+              to: ref('dim_customer')
+              field: customer_key
+      - name: product_key
+        tests:
+          - not_null
+          - relationships:
+              to: ref('dim_product')
+              field: product_key
+      - name: store_key
+        tests:
+          - not_null
+          - relationships:
+              to: ref('dim_store')
+              field: store_key
+      - name: net_amount
+        tests: [not_null]

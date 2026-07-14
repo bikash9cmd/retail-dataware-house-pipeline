@@ -1,0 +1,20 @@
+# --- Local demo (no AWS/Docker required) ---
+pandas>=2.0
+
+# --- Production ETL (AWS + Redshift) ---
+boto3>=1.34
+psycopg2-binary>=2.9
+
+# --- Transformation ---
+dbt-redshift>=1.7
+
+# --- Orchestration (install in your Airflow environment, not required for local_demo.py) ---
+apache-airflow>=2.8
+
+# --- API ---
+fastapi>=0.110
+uvicorn[standard]>=0.27
+pydantic>=2.6
+
+# --- Testing ---
+pytest>=8.0

@@ -1,0 +1,59 @@
+version: 2
+
+sources:
+  - name: staging
+    description: Raw tables loaded by etl/load_staging.py via Redshift COPY from S3.
+    tables:
+      - name: customers
+      - name: stores
+      - name: products
+      - name: orders
+
+models:
+  - name: stg_customers
+    description: Cleaned, deduplicated customer records.
+    columns:
+      - name: customer_id
+        tests: [not_null, unique]
+      - name: email
+        tests: [not_null]
+
+  - name: stg_products
+    description: Cleaned product catalog.
+    columns:
+      - name: product_id
+        tests: [not_null, unique]
+      - name: unit_price
+        tests: [not_null]
+
+  - name: stg_stores
+    description: Cleaned store dimension source.
+    columns:
+      - name: store_id
+        tests: [not_null, unique]
+
+  - name: stg_orders
+    description: Cleaned order-line transactions (grain -> one row per order line).
+    columns:
+      - name: order_id
+        tests: [not_null]
+      - name: customer_id
+        tests:
+          - not_null
+          - relationships:
+              to: ref('stg_customers')
+              field: customer_id
+      - name: product_id
+        tests:
+          - not_null
+          - relationships:
+              to: ref('stg_products')
+              field: product_id
+      - name: store_id
+        tests:
+          - not_null
+          - relationships:
+              to: ref('stg_stores')
+              field: store_id
+      - name: net_amount
+        tests: [not_null]

@@ -1,0 +1,28 @@
+# Local Postgres stand-in for Redshift (Redshift is PostgreSQL-derived,
+# so schema/SQL written against this container carries over with
+# minimal changes — mainly swapping COPY-from-S3 for a local loader
+# and dropping Redshift-only clauses like DISTSTYLE/SORTKEY).
+#
+# Usage:
+#   docker compose up -d
+#   psql "postgresql://etl_service:etl_password@localhost:5439/retail_dw" -f sql/redshift/01_staging_schema.sql
+#
+# For a zero-dependency check that doesn't need Docker at all, use
+# warehouse/local_demo.py (SQLite) instead — see README.
+version: "3.8"
+
+services:
+  postgres:
+    image: postgres:15
+    container_name: retail_dw_postgres
+    environment:
+      POSTGRES_USER: etl_service
+      POSTGRES_PASSWORD: etl_password
+      POSTGRES_DB: retail_dw
+    ports:
+      - "5439:5432"
+    volumes:
+      - retail_dw_pgdata:/var/lib/postgresql/data
+
+volumes:
+  retail_dw_pgdata:
