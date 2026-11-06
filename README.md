@@ -146,4 +146,3 @@ sequence that would reset every run.
 ## License
 
 MIT — see [LICENSE](LICENSE).
-# retail-dataware-house-pipeline
