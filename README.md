@@ -1,5 +1,7 @@
 # Retail Data Warehouse & ETL Pipeline
 
+> **Tech stack:** Python · ETL · Data warehouse · Analytics & BI
+
 A dimensional data warehouse and ELT pipeline for retail sales analytics —
 built to mirror a real production stack: **S3 (raw zone) → AWS Glue/Airflow
 (ingest) → Redshift (star schema) → dbt (transform + test) → FastAPI (serve)
