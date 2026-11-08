@@ -42,6 +42,41 @@ def load_staging(conn, raw_dir: Path):
         logger.info("staged %-9s %5d rows <- %s", table, len(df), path)
 
 
+ORDER_ID_COLUMNS = ["order_id", "customer_id", "store_id", "product_id"]
+ORDER_MONEY_COLUMNS = ["unit_price", "gross_amount", "discount_amount", "net_amount"]
+ORDER_LABEL_COLUMNS = ["channel", "payment_method"]
+
+
+def clean_orders(orders: pd.DataFrame) -> pd.DataFrame:
+    """Apply the same cleaning rules as dbt/retail_dw/models/staging/stg_orders.sql.
+
+    - trim the id columns, so " C0001" still joins to dim_customer
+    - drop lines with no order_id, a quantity that is not positive, or a
+      negative net_amount (refunds and bad rows never reach fact_sales)
+    - round the money columns to 2 decimals
+    - lower-case and trim channel / payment_method so "Online " == "online"
+    """
+    cleaned = orders.copy()
+    for col in ORDER_ID_COLUMNS:
+        cleaned[col] = cleaned[col].where(cleaned[col].isna(), cleaned[col].astype(str).str.strip())
+    for col in ORDER_LABEL_COLUMNS:
+        cleaned[col] = cleaned[col].where(cleaned[col].isna(), cleaned[col].astype(str).str.strip().str.lower())
+
+    quantity = pd.to_numeric(cleaned["quantity"], errors="coerce")
+    net_amount = pd.to_numeric(cleaned["net_amount"], errors="coerce")
+    keep = cleaned["order_id"].notna() & (quantity > 0) & (net_amount >= 0)
+
+    dropped = int((~keep).sum())
+    if dropped:
+        logger.warning("dropped %d of %d order line(s) that fail the stg_orders rules "
+                       "(null order_id, quantity <= 0 or net_amount < 0)", dropped, len(cleaned))
+
+    cleaned = cleaned[keep].reset_index(drop=True)
+    for col in ORDER_MONEY_COLUMNS:
+        cleaned[col] = pd.to_numeric(cleaned[col], errors="coerce").round(2)
+    return cleaned
+
+
 def build_star_schema(conn):
     cur = conn.cursor()
 
@@ -66,7 +101,7 @@ def build_star_schema(conn):
     stores.to_sql("dim_store", conn, if_exists="replace", index=False)
 
     # ---- dim_date (only the dates actually present in the order data) ---
-    orders = pd.read_sql("SELECT * FROM stg_orders", conn)
+    orders = clean_orders(pd.read_sql("SELECT * FROM stg_orders", conn))
     dates = pd.to_datetime(orders["order_date"]).dt.date.drop_duplicates().sort_values()
     dim_date = pd.DataFrame({"full_date": dates})
     dim_date["date_key"] = dim_date["full_date"].apply(lambda d: int(d.strftime("%Y%m%d")))
