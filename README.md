@@ -130,9 +130,11 @@ sequence that would reset every run.
 2. **dbt custom test** (`dbt/retail_dw/tests/assert_no_future_order_dates.sql`) — a business-rule check that doesn't fit a generic schema test.
 3. **`etl/data_quality_checks.py`** — pipeline-level gate run by Airflow after `dbt test`: freshness (did today's partition actually load?) and row-count sanity, which are awkward to express as a single dbt test.
 
-## Mapping to the job requirements
+## Skills demonstrated
 
-| Requirement | Where |
+Where each data-engineering capability is implemented in this repo:
+
+| Capability | Where |
 |---|---|
 | ETL/ELT pipeline design | `etl/extract_s3.py`, `etl/load_staging.py`, `dags/retail_dw_pipeline_dag.py` |
 | Dimensional modeling, OLTP/OLAP, data warehousing | `sql/redshift/02_dimension_tables.sql`, `03_fact_tables.sql` |
@@ -148,4 +150,3 @@ sequence that would reset every run.
 ## License
 
 MIT — see [LICENSE](LICENSE).
-# retail-dataware-house-pipeline
