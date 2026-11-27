@@ -61,13 +61,13 @@ data_quality_gate → refresh_product_margin → notify_success`.
 | `dags/retail_dw_pipeline_dag.py` | Airflow DAG orchestrating the full pipeline |
 | `api/` | FastAPI service exposing warehouse KPIs as REST endpoints |
 | `warehouse/local_demo.py` | Runs the same star-schema transform against SQLite — no AWS/Docker needed |
-| `tests/` | pytest suite validating the transform logic and data-quality invariants |
+| `tests/` | pytest suite validating the transform logic, data-quality invariants and the API (local + Redshift SQL) |
 | `.github/workflows/ci.yml` | CI: generates data, runs the pipeline, runs tests, compiles all modules |
 
 ## Quickstart (local, no AWS account needed)
 
 ```bash
-pip install pandas pytest
+pip install pandas pytest fastapi httpx
 
 python scripts/generate_sample_data.py --rows 5000
 python warehouse/local_demo.py
