@@ -1,9 +1,11 @@
 """Pydantic response models for the metrics API."""
+from datetime import date
+
 from pydantic import BaseModel
 
 
 class DailySales(BaseModel):
-    full_date: str
+    full_date: date  # DATE in Redshift, ISO string in the SQLite demo
     year: int
     month_name: str
     order_count: int
