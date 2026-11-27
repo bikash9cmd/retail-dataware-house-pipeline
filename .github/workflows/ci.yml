@@ -17,7 +17,7 @@ jobs:
           python-version: "3.11"
 
       - name: Install dependencies
-        run: pip install pandas pytest
+        run: pip install pandas pytest fastapi httpx
 
       - name: Generate sample data
         run: python scripts/generate_sample_data.py --rows 2000
